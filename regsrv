@@ -1,0 +1,54 @@
+#include <windows.h>
+#include <iostream>
+
+bool Register32BitDLL(const std::wstring& dllPath)
+{
+    // Путь к 32-разрядной версии regsvr32
+    std::wstring regsvr32Path = L"C:\\Windows\\SysWow64\\regsvr32.exe";
+
+    // Команда для регистрации DLL
+    std::wstring command = regsvr32Path + L" /s " + dllPath;
+
+    // Настройка структуры STARTUPINFO
+    STARTUPINFO si;
+    ZeroMemory(&si, sizeof(si));
+    si.cb = sizeof(si);
+
+    // Настройка структуры PROCESS_INFORMATION
+    PROCESS_INFORMATION pi;
+    ZeroMemory(&pi, sizeof(pi));
+
+    // Создание процесса для выполнения команды регистрации
+    if (CreateProcess(NULL, &command[0], NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi))
+    {
+        // Ожидание завершения процесса
+        WaitForSingleObject(pi.hProcess, INFINITE);
+
+        // Закрытие дескрипторов
+        CloseHandle(pi.hProcess);
+        CloseHandle(pi.hThread);
+
+        return true;
+    }
+    else
+    {
+        std::cerr << "Failed to create process for regsvr32. Error: " << GetLastError() << std::endl;
+        return false;
+    }
+}
+
+int main()
+{
+    std::wstring dllPath = L"path_to_your_32bit_dll.dll"; // Укажите путь к вашей 32-разрядной DLL
+
+    if (Register32BitDLL(dllPath))
+    {
+        std::wcout << L"32-bit DLL registered successfully." << std::endl;
+    }
+    else
+    {
+        std::wcout << L"Failed to register 32-bit DLL." << std::endl;
+    }
+
+    return 0;
+}
