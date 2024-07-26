@@ -1,6 +1,20 @@
 #include <windows.h>
 #include <iostream>
 
+bool IsDLLRegistered(const std::wstring& clsid)
+{
+    std::wstring registryPath = L"SOFTWARE\\Classes\\CLSID\\" + clsid;
+
+    HKEY hKey;
+    LONG result = RegOpenKeyEx(HKEY_LOCAL_MACHINE, registryPath.c_str(), 0, KEY_READ, &hKey);
+    if (result == ERROR_SUCCESS)
+    {
+        RegCloseKey(hKey);
+        return true;
+    }
+    return false;
+}
+
 bool Register32BitDLL(const std::wstring& dllPath)
 {
     // Путь к 32-разрядной версии regsvr32
@@ -40,14 +54,22 @@ bool Register32BitDLL(const std::wstring& dllPath)
 int main()
 {
     std::wstring dllPath = L"path_to_your_32bit_dll.dll"; // Укажите путь к вашей 32-разрядной DLL
+    std::wstring clsid = L"{00000000-0000-0000-0000-000000000000}"; // Укажите CLSID вашей DLL
 
-    if (Register32BitDLL(dllPath))
+    if (IsDLLRegistered(clsid))
     {
-        std::wcout << L"32-bit DLL registered successfully." << std::endl;
+        std::wcout << L"32-bit DLL is already registered." << std::endl;
     }
     else
     {
-        std::wcout << L"Failed to register 32-bit DLL." << std::endl;
+        if (Register32BitDLL(dllPath))
+        {
+            std::wcout << L"32-bit DLL registered successfully." << std::endl;
+        }
+        else
+        {
+            std::wcout << L"Failed to register 32-bit DLL." << std::endl;
+        }
     }
 
     return 0;
